@@ -1,0 +1,234 @@
+////////////////////////////////////////////////////////////////////////////////
+// Storage
+
+User
+{
+    "_id": ObjectId("user1"),
+    "email": "user@example.com",
+    "password": "123456",
+    "personalDecks": [ObjectId("deck1"), ObjectId("deck2")],
+    "sharedDecks": [ObjectId("deck3"), ObjectId("deck4")]
+}
+
+Deck
+{
+    "_id": ObjectId("deck1"),
+    "owner": ObjectId("user1"),
+    "name": "Deck 1",
+    "fromLanguage": "English",
+    "toLanguage": "Russian",
+    "cards": [ObjectId("card1"), ObjectId("card2")]
+}
+
+Card
+{
+    "_id": ObjectId("card1"),
+    "deck": ObjectId("deck1"),
+    "word": "Word 1",
+    "comment": "Comment 1",
+    "translation": "Translation 1",
+    "difficulty": 10,
+    "hidden": false
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Entities
+
+User
+{
+    "email": "user@example.com",
+    "personalDecks": ["Deck 1", "Deck 2"],
+    "sharedDecks": [
+        {"email": "another@example.com", "name": "Shared Deck 1"},
+        {"email": "another@example.com", "name": "Shared Deck 2"}
+    ]
+}
+
+Deck
+{
+    "owner": "user@example.com",
+    "name": "Deck 1",
+    "fromLanguage": "English",
+    "toLanguage": "Russian",
+    "cards": [
+        {"word": "Word 1", "comment": "Comment 1"},
+        {"word": "Word 2", "comment": "Comment 2"}
+    ]
+}
+
+Card
+{
+    "owner": "user@example.com",
+    "deck": "Deck 1",
+    "word": "Word 1",
+    "comment": "Comment 1",
+    "translation": "Translation 1",
+    "difficulty": 10,
+    "hidden": false
+}
+
+ExpandedDeck
+{
+    "owner": "user@example.com",
+    "name": "Deck 1",
+    "fromLanguage": "English",
+    "toLanguage": "Russian",
+    "cards": [
+        {
+            "word": "Word 1",
+            "comment": "Comment 1",
+            "translation": "Translation 1",
+            "difficulty": 10,
+            "hidden": false
+        },
+        {
+            "word": "Word 1",
+            "comment": "Comment 1",
+            "translation": "Translation 1",
+            "difficulty": 10,
+            "hidden": false
+        }
+    ]
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Requests
+
+POST /learnwordsapi/2.0 HTTP/1.0
+
+{
+    "entity": "user",
+    "method": "add",
+    "email": "user@example.com",
+    "password": "123456"
+}
+
+{
+    "entity": "user",
+    "method": "get",
+    "email": "user@example.com"
+}
+
+{
+    "entity": "deck",
+    "method": "save",
+    "email": "user@example.com",
+    "deck": see entity Deck
+}
+
+{
+    "entity": "deck",
+    "method": "get",
+    "email": "user@example.com",
+    "name": "Deck 1"
+}
+
+{
+    "entity": "deck",
+    "method": "getExpanded",
+    "email": "user@example.com",
+    "name": "Deck 1"
+}
+
+{
+    "entity": "deck",
+    "method": "delete",
+    "email": "user@example.com",
+    "name": "Deck 1"
+}
+
+{
+    "entity": "deck",
+    "method": "update",
+    "email": "user@example.com",
+    "name": "old name",
+    "properties": {
+        "name": "new name",
+        "fromLanguage": "new value",
+        "toLanguage": "new value"
+    }
+}
+
+{
+    "email": "user@example.com",
+    "entity": "deck",
+    "method": "share",
+    "name": "Deck 1",
+    "user": "another@example.com"
+}
+
+{
+    "entity": "card",
+    "method": "save",
+    "email": "user@example.com",
+    "card": see entity Card
+}
+
+{
+    "entity": "card",
+    "method": "get",
+    "email": "user@example.com",
+    "deck": "Deck 1",
+    "word": "Word 1",
+    "comment": "Comment 1"
+}
+
+{
+    "entity": "card",
+    "method": "delete",
+    "email": "user@example.com",
+    "deck": "Deck 1",
+    "word": "Word 1",
+    "comment": "Comment 1"
+}
+
+{
+    "entity": "card",
+    "method": "update",
+    "email": "user@example.com",
+    "deck": "deck",
+    "word": "old word",
+    "comment": "old comment",
+    "properties": {
+        "word": "new word",
+        "comment": "new value",
+        "translation": "new value",
+        "difficulty": 10,
+        "hidden": true
+    }
+}
+
+{
+    "email": "user@example.com",
+    "entity": "card",
+    "method": "move",
+    "from": "Deck 1",
+    "to": "Deck 2"
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Responses
+
+HTTP/1.0 200 OK
+
+{
+    "error": {
+        "type": "server",
+        "code": 1,
+        "message": "..."
+    }
+}
+
+{
+    "error": {
+        "type": "method",
+        "code": 1,
+        "message": "..."
+    }
+}
+
+{
+    "response": {
+        requested values
+    }
+}
