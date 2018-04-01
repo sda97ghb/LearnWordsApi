@@ -39,7 +39,7 @@ public class LearnWordsService {
         if (user == null)
             return new ApiError(ApiError.METHOD, 1, "There is no user with this email.").toJson().getBytes();
 
-        return new ApiResponse(Map.of("user", new UserMapper().mapStorageToApi(user))).toJson().getBytes();
+        return new ApiResponse(new UserMapper().mapStorageToApi(user)).toJson().getBytes();
     }
 
     @ApiRequest(entity = "deck", method = "get")
@@ -58,7 +58,7 @@ public class LearnWordsService {
         if (deck == null)
             return new ApiError(ApiError.METHOD, 2, "There is no deck with this name.").toJson().getBytes();
 
-        return new ApiResponse(Map.of("deck", new DeckMapper().mapStorageToApi(deck))).toJson().getBytes();
+        return new ApiResponse(new DeckMapper().mapStorageToApi(deck)).toJson().getBytes();
     }
 
     @ApiRequest(entity = "deck", method = "getExpanded")
@@ -77,7 +77,7 @@ public class LearnWordsService {
         if (deck == null)
             return new ApiError(ApiError.METHOD, 2, "There is no deck with this name.").toJson().getBytes();
 
-        return new ApiResponse(Map.of("deck", new DeckMapper().mapStorageToApiExpanded(deck))).toJson().getBytes();
+        return new ApiResponse(new DeckMapper().mapStorageToApiExpanded(deck)).toJson().getBytes();
     }
 
     @ApiRequest(entity = "deck", method = "save")
@@ -253,7 +253,7 @@ public class LearnWordsService {
         if (card == null)
             return new ApiError(ApiError.METHOD, 3, deckName + " does not contain the card with word " + word + " and comment " + comment + ".").toJson().getBytes();
 
-        return new ApiResponse(Map.of("card", new CardMapper().mapStorageToApi(card))).toJson().getBytes();
+        return new ApiResponse(new CardMapper().mapStorageToApi(card)).toJson().getBytes();
     }
 
     @ApiRequest(entity = "card", method = "delete")
