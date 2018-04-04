@@ -3,6 +3,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.net.URLDecoder;
@@ -18,7 +19,7 @@ public class Main {
         return "LearnWordsApi server.";
     }
 
-    @RequestMapping("/api/2.0")
+    @RequestMapping(path = "/api/2.0", method = RequestMethod.POST, produces = "application/json")
     @ResponseBody
     byte[] api(@RequestBody String requestBody) {
         requestBody = URLDecoder.decode(requestBody);
