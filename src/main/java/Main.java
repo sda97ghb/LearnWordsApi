@@ -19,7 +19,7 @@ public class Main {
         return "LearnWordsApi server.";
     }
 
-    @RequestMapping(path = "/api/2.0", method = RequestMethod.POST, produces = "application/json")
+    @RequestMapping(path = "/api/2.1", method = RequestMethod.POST, produces = "application/json")
     @ResponseBody
     byte[] api(@RequestBody String requestBody) {
         requestBody = URLDecoder.decode(requestBody);

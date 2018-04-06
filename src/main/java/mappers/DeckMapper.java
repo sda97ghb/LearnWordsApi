@@ -1,9 +1,6 @@
 package mappers;
 
-import api.ApiCard;
-import api.ApiCardReference;
-import api.ApiDeck;
-import api.ApiExpandedDeck;
+import api.*;
 import com.mongodb.client.model.Filters;
 import storage.Database;
 import org.bson.types.ObjectId;
@@ -76,6 +73,35 @@ public class DeckMapper implements Mapper<StorageDeck, ApiDeck> {
                     .map(this::getApiCard)
                     .collect(Collectors.toList()));
         return apiExpandedDeck;
+    }
+
+    public ApiDeckInfo mapStorageToApiInfo(StorageDeck storageDeck) {
+        ApiDeckInfo apiDeckInfo = new ApiDeckInfo();
+        apiDeckInfo.setOwner(getUserEmailFromUserId(storageDeck.getOwner()));
+        apiDeckInfo.setName(storageDeck.getName());
+        apiDeckInfo.setFromLanguage(storageDeck.getFromLanguage());
+        apiDeckInfo.setToLanguage(storageDeck.getToLanguage());
+        if (storageDeck.getCards() != null) {
+            apiDeckInfo.setNumberOfCards(storageDeck.getCards().stream()
+                    .map(this::getCardFromObjectId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList())
+                    .size()
+            );
+            apiDeckInfo.setNumberOfHiddenCards(storageDeck.getCards().stream()
+                    .map(this::getCardFromObjectId)
+                    .filter(Objects::nonNull)
+                    .map(StorageCard::isHidden)
+                    .filter(Boolean::booleanValue)
+                    .collect(Collectors.toList())
+                    .size()
+            );
+        }
+        else {
+            apiDeckInfo.setNumberOfCards(0);
+            apiDeckInfo.setNumberOfHiddenCards(0);
+        }
+        return apiDeckInfo;
     }
 
     @Override

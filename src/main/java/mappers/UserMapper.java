@@ -1,5 +1,6 @@
 package mappers;
 
+import api.ApiExpandedUser;
 import api.ApiSharedDeckReference;
 import api.ApiUser;
 import com.mongodb.client.model.Filters;
@@ -56,6 +57,26 @@ public class UserMapper implements Mapper<StorageUser, ApiUser> {
                 .map(this::getDeckFromDatabase)
                 .filter(Objects::nonNull)
                 .map(StorageDeck::getName)
+                .collect(Collectors.toList()));
+        apiUser.setSharedDecks(storageUser.getSharedDecks().stream()
+                .map(this::getDeckFromDatabase)
+                .filter(Objects::nonNull)
+                .map(this::getApiSharedDeckReferenceFromStorageDeck)
+                .collect(Collectors.toList()));
+        return apiUser;
+    }
+
+    public ApiExpandedUser mapStorageToApiExpanded(StorageUser storageUser) {
+        this.storageUser = storageUser;
+
+        DeckMapper deckMapper = new DeckMapper();
+
+        ApiExpandedUser apiUser = new ApiExpandedUser();
+        apiUser.setEmail(storageUser.getEmail());
+        apiUser.setPersonalDecks(storageUser.getPersonalDecks().stream()
+                .map(this::getDeckFromDatabase)
+                .filter(Objects::nonNull)
+                .map(deckMapper::mapStorageToApiInfo)
                 .collect(Collectors.toList()));
         apiUser.setSharedDecks(storageUser.getSharedDecks().stream()
                 .map(this::getDeckFromDatabase)

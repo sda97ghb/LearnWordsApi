@@ -42,6 +42,17 @@ public class LearnWordsService {
         return new ApiResponse(new UserMapper().mapStorageToApi(user)).toJson().getBytes();
     }
 
+    @ApiRequest(entity = "user", method = "getExpanded")
+    public byte[] getExpandedUser(@ApiParameter("email") String email) {
+        MongoCollection<StorageUser> users = Database.getCollection(StorageUser.class);
+
+        StorageUser user = users.find(Filters.eq("email", email)).first();
+        if (user == null)
+            return new ApiError(ApiError.METHOD, 1, "There is no user with this email.").toJson().getBytes();
+
+        return new ApiResponse(new UserMapper().mapStorageToApiExpanded(user)).toJson().getBytes();
+    }
+
     @ApiRequest(entity = "deck", method = "get")
     public byte[] getDeck(@ApiParameter("email") String email, @ApiParameter("name") String deckName) {
         MongoCollection<StorageUser> users = Database.getCollection(StorageUser.class);
