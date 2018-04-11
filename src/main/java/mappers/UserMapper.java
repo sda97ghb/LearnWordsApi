@@ -5,9 +5,7 @@ import api.ApiSharedDeckReference;
 import api.ApiUser;
 import com.mongodb.client.model.Filters;
 import org.bson.types.ObjectId;
-import storage.Database;
-import storage.StorageDeck;
-import storage.StorageUser;
+import storage.*;
 
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -15,35 +13,20 @@ import java.util.stream.Collectors;
 public class UserMapper implements Mapper<StorageUser, ApiUser> {
     private StorageUser storageUser;
 
-    private StorageUser getStorageUserWithEmail(String email) {
-        return Database.getCollection(StorageUser.class)
-                .find(Filters.eq("email", email)).first();
-    }
-
-    private StorageDeck getDeckFromDatabase(ObjectId objectId) {
-        return Database.getCollection(StorageDeck.class).find(Filters.eq("_id", objectId)).first();
-    }
-
     private ApiSharedDeckReference getApiSharedDeckReferenceFromStorageDeck(StorageDeck storageDeck) {
         return new ApiSharedDeckReference(storageUser.getEmail(), storageDeck.getName());
     }
 
     private ObjectId getDeckIdFromName(String name) {
-        StorageDeck deck = Database.getCollection(StorageDeck.class)
-                .find(Filters.and(Filters.eq("owner", storageUser.getId()),
-                        Filters.eq("name", name))).first();
+        StorageDeck deck = StorageDeckRepository.getByOwnerIdAndName(storageUser.getId(), name);
         return deck == null ? null : deck.getId();
     }
 
     private ObjectId getDeckIdFromApiSharedDeckReference(ApiSharedDeckReference apiSharedDeckReference) {
-        StorageUser user = Database.getCollection(StorageUser.class)
-                .find(Filters.eq("email", apiSharedDeckReference.getEmail()))
-                .first();
+        StorageUser user = StorageUserRepository.getByEmail(apiSharedDeckReference.getEmail());
         if (user == null)
             return null;
-        StorageDeck deck = Database.getCollection(StorageDeck.class)
-                .find(Filters.and(Filters.eq("owner", user.getId()),
-                        Filters.eq("name", apiSharedDeckReference.getName()))).first();
+        StorageDeck deck = StorageDeckRepository.getByOwnerIdAndName(user.getId(), apiSharedDeckReference.getName());
         return deck == null ? null : deck.getId();
     }
 
@@ -54,12 +37,12 @@ public class UserMapper implements Mapper<StorageUser, ApiUser> {
         ApiUser apiUser = new ApiUser();
         apiUser.setEmail(storageUser.getEmail());
         apiUser.setPersonalDecks(storageUser.getPersonalDecks().stream()
-                .map(this::getDeckFromDatabase)
+                .map(StorageDeckRepository::getById)
                 .filter(Objects::nonNull)
                 .map(StorageDeck::getName)
                 .collect(Collectors.toList()));
         apiUser.setSharedDecks(storageUser.getSharedDecks().stream()
-                .map(this::getDeckFromDatabase)
+                .map(StorageDeckRepository::getById)
                 .filter(Objects::nonNull)
                 .map(this::getApiSharedDeckReferenceFromStorageDeck)
                 .collect(Collectors.toList()));
@@ -74,12 +57,12 @@ public class UserMapper implements Mapper<StorageUser, ApiUser> {
         ApiExpandedUser apiUser = new ApiExpandedUser();
         apiUser.setEmail(storageUser.getEmail());
         apiUser.setPersonalDecks(storageUser.getPersonalDecks().stream()
-                .map(this::getDeckFromDatabase)
+                .map(StorageDeckRepository::getById)
                 .filter(Objects::nonNull)
                 .map(deckMapper::mapStorageToApiInfo)
                 .collect(Collectors.toList()));
         apiUser.setSharedDecks(storageUser.getSharedDecks().stream()
-                .map(this::getDeckFromDatabase)
+                .map(StorageDeckRepository::getById)
                 .filter(Objects::nonNull)
                 .map(this::getApiSharedDeckReferenceFromStorageDeck)
                 .collect(Collectors.toList()));
@@ -88,7 +71,7 @@ public class UserMapper implements Mapper<StorageUser, ApiUser> {
 
     @Override
     public StorageUser mapApiToStorage(ApiUser apiUser) {
-        StorageUser storageUser = getStorageUserWithEmail(apiUser.getEmail());
+        StorageUser storageUser = StorageUserRepository.getByEmail(apiUser.getEmail());
         if (storageUser == null) {
             storageUser = new StorageUser();
             storageUser.setEmail(apiUser.getEmail());

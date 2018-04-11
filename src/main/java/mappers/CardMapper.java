@@ -2,20 +2,15 @@ package mappers;
 
 import api.ApiCard;
 import com.mongodb.client.model.Filters;
-import storage.Database;
-import storage.StorageCard;
-import storage.StorageDeck;
-import storage.StorageUser;
+import storage.*;
 
 public class CardMapper implements Mapper<StorageCard, ApiCard> {
     @Override
     public ApiCard mapStorageToApi(StorageCard storageCard) {
-        StorageDeck deck = Database.getCollection(StorageDeck.class)
-                .find(Filters.eq("_id", storageCard.getDeck())).first();
+        StorageDeck deck = StorageDeckRepository.getById(storageCard.getDeck());
         if (deck == null)
             return null;
-        StorageUser user = Database.getCollection(StorageUser.class)
-                .find(Filters.eq("_id", deck.getOwner())).first();
+        StorageUser user = StorageUserRepository.getById(deck.getOwner());
         if (user == null)
             return null;
 
@@ -32,24 +27,13 @@ public class CardMapper implements Mapper<StorageCard, ApiCard> {
 
     @Override
     public StorageCard mapApiToStorage(ApiCard apiCard) {
-        StorageUser user = Database.getCollection(StorageUser.class)
-                .find(Filters.eq("email", apiCard.getOwner())).first();
+        StorageUser user = StorageUserRepository.getByEmail(apiCard.getOwner());
         if (user == null)
             return null;
-        StorageDeck deck = Database.getCollection(StorageDeck.class)
-                .find(Filters.and(
-                        Filters.eq("owner", user.getId()),
-                        Filters.eq("name", apiCard.getDeck())
-                ))
-                .first();
+        StorageDeck deck = StorageDeckRepository.getByOwnerIdAndName(user.getId(), apiCard.getDeck());
         if (deck == null)
             return null;
-        StorageCard storageCard = Database.getCollection(StorageCard.class)
-                .find(Filters.and(
-                        Filters.eq("deck", deck.getId()),
-                        Filters.eq("word", apiCard.getWord()),
-                        Filters.eq("comment", apiCard.getComment())
-                )).first();
+        StorageCard storageCard = StorageCardRepository.getByDeckIdAndWordAndComment(deck.getId(), apiCard.getWord(), apiCard.getComment());
         if (storageCard == null) {
             storageCard = new StorageCard();
             storageCard.setDeck(deck.getId());

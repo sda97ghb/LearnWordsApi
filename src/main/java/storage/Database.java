@@ -43,6 +43,10 @@ public class Database {
         return getMongoDatabase().getCollection(clazz.getName(), clazz);
     }
 
+    public static <T> T getById(ObjectId id, Class<T> clazz) {
+        return getCollection(clazz).find(Filters.eq("_id", id)).first();
+    }
+
     public static Gson getGson() {
         return gson;
     }

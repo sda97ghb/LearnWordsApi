@@ -1,12 +1,8 @@
 package mappers;
 
 import api.*;
-import com.mongodb.client.model.Filters;
-import storage.Database;
 import org.bson.types.ObjectId;
-import storage.StorageCard;
-import storage.StorageDeck;
-import storage.StorageUser;
+import storage.*;
 
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -14,15 +10,9 @@ import java.util.stream.Collectors;
 public class DeckMapper implements Mapper<StorageDeck, ApiDeck> {
     private StorageDeck storageDeck;
 
-    private String getUserEmailFromUserId(ObjectId id) {
-        StorageUser user = Database.getCollection(StorageUser.class)
-                .find(Filters.eq("_id", id)).first();
+    private String getEmailOfUserWithId(ObjectId id) {
+        StorageUser user = StorageUserRepository.getById(id);
         return user == null ? null : user.getEmail();
-    }
-
-    private StorageCard getCardFromObjectId(ObjectId objectId) {
-        return Database.getCollection(StorageCard.class)
-                .find(Filters.eq("_id", objectId)).first();
     }
 
     private ApiCardReference getApiCardReference(StorageCard storageCard) {
@@ -33,27 +23,16 @@ public class DeckMapper implements Mapper<StorageDeck, ApiDeck> {
         return new CardMapper().mapStorageToApi(storageCard);
     }
 
-    private ObjectId getCardIdFromApiCardReference(ApiCardReference apiCardReference) {
-        StorageCard storageCard = Database.getCollection(StorageCard.class)
-                .find(Filters.and(
-                        Filters.eq("deck", this.storageDeck.getId()),
-                        Filters.eq("word", apiCardReference.getWord()),
-                        Filters.eq("comment", apiCardReference.getComment())
-                ))
-                .first();
-        return storageCard == null ? null : storageCard.getId();
-    }
-
     @Override
     public ApiDeck mapStorageToApi(StorageDeck storageDeck) {
         ApiDeck apiDeck = new ApiDeck();
-        apiDeck.setOwner(getUserEmailFromUserId(storageDeck.getOwner()));
+        apiDeck.setOwner(getEmailOfUserWithId(storageDeck.getOwner()));
         apiDeck.setName(storageDeck.getName());
         apiDeck.setFromLanguage(storageDeck.getFromLanguage());
         apiDeck.setToLanguage(storageDeck.getToLanguage());
         if (storageDeck.getCards() != null)
             apiDeck.setCards(storageDeck.getCards().stream()
-                    .map(this::getCardFromObjectId)
+                    .map(StorageCardRepository::getById)
                     .filter(Objects::nonNull)
                     .map(this::getApiCardReference)
                     .collect(Collectors.toList()));
@@ -62,13 +41,13 @@ public class DeckMapper implements Mapper<StorageDeck, ApiDeck> {
 
     public ApiExpandedDeck mapStorageToApiExpanded(StorageDeck storageDeck) {
         ApiExpandedDeck apiExpandedDeck = new ApiExpandedDeck();
-        apiExpandedDeck.setOwner(getUserEmailFromUserId(storageDeck.getOwner()));
+        apiExpandedDeck.setOwner(getEmailOfUserWithId(storageDeck.getOwner()));
         apiExpandedDeck.setName(storageDeck.getName());
         apiExpandedDeck.setFromLanguage(storageDeck.getFromLanguage());
         apiExpandedDeck.setToLanguage(storageDeck.getToLanguage());
         if (storageDeck.getCards() != null)
             apiExpandedDeck.setCards(storageDeck.getCards().stream()
-                    .map(this::getCardFromObjectId)
+                    .map(StorageCardRepository::getById)
                     .filter(Objects::nonNull)
                     .map(this::getApiCard)
                     .collect(Collectors.toList()));
@@ -77,19 +56,19 @@ public class DeckMapper implements Mapper<StorageDeck, ApiDeck> {
 
     public ApiDeckInfo mapStorageToApiInfo(StorageDeck storageDeck) {
         ApiDeckInfo apiDeckInfo = new ApiDeckInfo();
-        apiDeckInfo.setOwner(getUserEmailFromUserId(storageDeck.getOwner()));
+        apiDeckInfo.setOwner(getEmailOfUserWithId(storageDeck.getOwner()));
         apiDeckInfo.setName(storageDeck.getName());
         apiDeckInfo.setFromLanguage(storageDeck.getFromLanguage());
         apiDeckInfo.setToLanguage(storageDeck.getToLanguage());
         if (storageDeck.getCards() != null) {
             apiDeckInfo.setNumberOfCards(storageDeck.getCards().stream()
-                    .map(this::getCardFromObjectId)
+                    .map(StorageCardRepository::getById)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList())
                     .size()
             );
             apiDeckInfo.setNumberOfHiddenCards(storageDeck.getCards().stream()
-                    .map(this::getCardFromObjectId)
+                    .map(StorageCardRepository::getById)
                     .filter(Objects::nonNull)
                     .map(StorageCard::isHidden)
                     .filter(Boolean::booleanValue)
@@ -106,16 +85,10 @@ public class DeckMapper implements Mapper<StorageDeck, ApiDeck> {
 
     @Override
     public StorageDeck mapApiToStorage(ApiDeck apiDeck) {
-        StorageUser user = Database.getCollection(StorageUser.class)
-                .find(Filters.eq("email", apiDeck.getOwner())).first();
+        StorageUser user = StorageUserRepository.getByEmail(apiDeck.getOwner());
         if (user == null)
             return null;
-        StorageDeck storageDeck = Database.getCollection(StorageDeck.class)
-                .find(Filters.and(
-                        Filters.eq("owner", user.getId()),
-                        Filters.eq("name", apiDeck.getName())
-                ))
-                .first();
+        StorageDeck storageDeck = StorageDeckRepository.getByOwnerIdAndName(user.getId(), apiDeck.getName());
         if (storageDeck == null) {
             storageDeck = new StorageDeck();
             storageDeck.setOwner(user.getId());
@@ -124,12 +97,19 @@ public class DeckMapper implements Mapper<StorageDeck, ApiDeck> {
         else {
             this.storageDeck = storageDeck;
             storageDeck.setCards(apiDeck.getCards().stream()
-                    .map(this::getCardIdFromApiCardReference)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList()));
+                .map(this::getStorageCardFromApiCardReference)
+                .filter(Objects::nonNull)
+                .map(StorageCard::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()));
         }
         storageDeck.setFromLanguage(apiDeck.getFromLanguage());
         storageDeck.setToLanguage(apiDeck.getToLanguage());
         return storageDeck;
+    }
+
+    private StorageCard getStorageCardFromApiCardReference(ApiCardReference apiCardReference) {
+        return StorageCardRepository.getByDeckIdAndWordAndComment(
+            storageDeck.getId(), apiCardReference.getWord(), apiCardReference.getComment());
     }
 }
