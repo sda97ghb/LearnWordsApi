@@ -2,6 +2,7 @@ import api.ApiCard;
 import api.ApiDeck;
 import apiannotation.ApiParameter;
 import apiannotation.ApiRequest;
+import auxiliary.UserVerifier;
 import mappers.CardMapper;
 import mappers.DeckMapper;
 import mappers.UserMapper;
@@ -12,12 +13,30 @@ import storage.StorageDeckRepository;
 import storage.StorageUser;
 import storage.StorageUserRepository;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Map;
 
 public class LearnWordsService {
     @ApiRequest(entity = "test", method = "getThread")
     public byte[] test_getThread() {
         return Thread.currentThread().getName().getBytes();
+    }
+
+    @ApiRequest(entity = "test", method = "echo")
+    public byte[] testEcho(@ApiParameter("message") String message) {
+        return message.getBytes();
+    }
+
+    @ApiRequest(entity = "test", method = "idToken")
+    public byte[] testIdToken(@ApiParameter("id_token") String idToken) {
+        try {
+            return new ApiResponse(UserVerifier.getEmail(idToken)).toJson().getBytes();
+        }
+        catch (GeneralSecurityException | IOException | UserVerifier.InvalidIdTokenException e) {
+            e.printStackTrace();
+            return new ApiError(ApiError.METHOD, 1, e.getMessage()).toJson().getBytes();
+        }
     }
 
     @ApiRequest(entity = "user", method = "add")
