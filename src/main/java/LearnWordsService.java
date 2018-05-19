@@ -2,22 +2,30 @@ import api.ApiCard;
 import api.ApiDeck;
 import apiannotation.ApiParameter;
 import apiannotation.ApiRequest;
-import auxiliary.UserVerifier;
+import apiannotation.ApiRequireAuthorization;
+import auxiliary.GoogleAuthorization;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import mappers.CardMapper;
 import mappers.DeckMapper;
 import mappers.UserMapper;
-import storage.StorageCard;
-import storage.StorageCardRepository;
-import storage.StorageDeck;
-import storage.StorageDeckRepository;
-import storage.StorageUser;
-import storage.StorageUserRepository;
+import org.bson.types.ObjectId;
+import storage.*;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Map;
 
-public class LearnWordsService {
+public class LearnWordsService extends ApiService {
+
+    LearnWordsService() {
+    }
+
+    LearnWordsService(GoogleIdToken.Payload idTokenPayload) {
+        super(idTokenPayload);
+    }
+
+    // Test methods
+
     @ApiRequest(entity = "test", method = "getThread")
     public byte[] test_getThread() {
         return Thread.currentThread().getName().getBytes();
@@ -31,30 +39,47 @@ public class LearnWordsService {
     @ApiRequest(entity = "test", method = "idToken")
     public byte[] testIdToken(@ApiParameter("id_token") String idToken) {
         try {
-            return new ApiResponse(UserVerifier.getEmail(idToken)).toJson().getBytes();
+            return new ApiResponse(GoogleAuthorization.getEmail(idToken)).toJson().getBytes();
         }
-        catch (GeneralSecurityException | IOException | UserVerifier.InvalidIdTokenException e) {
+        catch (GeneralSecurityException | IOException | GoogleAuthorization.InvalidIdTokenException e) {
             e.printStackTrace();
             return new ApiError(ApiError.METHOD, 1, e.getMessage()).toJson().getBytes();
         }
     }
 
-    @ApiRequest(entity = "user", method = "add")
-    public byte[] addUser(@ApiParameter("email") String email, @ApiParameter("password") String password) {
-        StorageUser user = StorageUserRepository.getByEmail(email);
-        if (user != null)
-            return new ApiError(ApiError.METHOD, 1, "User is already registered.").toJson().getBytes();
+    @ApiRequest(entity = "test", method = "rotate")
+    public byte[] testRotate() {
+        try {
+            Thread.sleep(4000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-        user = new StorageUser();
-        user.setEmail(email);
-        user.setPassword(password);
-        StorageUserRepository.insert(user);
+        return new ApiResponse("Hello World!").toJson().getBytes();
+    }
+
+    // Actual api methods
+
+    @ApiRequest(entity = "user", method = "register")
+    @ApiRequireAuthorization
+    public byte[] registerUser() {
+        String email = getEmail();
+
+        StorageUser user = StorageUserRepository.getByEmail(email);
+        if (user == null) {
+            user = new StorageUser();
+            user.setEmail(email);
+            StorageUserRepository.insert(user);
+        }
 
         return new ApiResponse(null).toJson().getBytes();
     }
 
     @ApiRequest(entity = "user", method = "get")
-    public byte[] getUser(@ApiParameter("email") String email) {
+    @ApiRequireAuthorization
+    public byte[] getUser() {
+        String email = getEmail();
+
         StorageUser user = StorageUserRepository.getByEmail(email);
         if (user == null)
             return new ApiError(ApiError.METHOD, 1, "There is no user with this email.").toJson().getBytes();
@@ -63,7 +88,10 @@ public class LearnWordsService {
     }
 
     @ApiRequest(entity = "user", method = "getExpanded")
-    public byte[] getExpandedUser(@ApiParameter("email") String email) {
+    @ApiRequireAuthorization
+    public byte[] getExpandedUser() {
+        String email = getEmail();
+
         StorageUser user = StorageUserRepository.getByEmail(email);
         if (user == null)
             return new ApiError(ApiError.METHOD, 1, "There is no user with this email.").toJson().getBytes();
@@ -71,8 +99,17 @@ public class LearnWordsService {
         return new ApiResponse(new UserMapper().mapStorageToApiExpanded(user)).toJson().getBytes();
     }
 
+    @ApiRequest(entity = "user", method = "dumpDT")
+    @ApiRequireAuthorization
+    public byte[] dumpDT() {
+        return new ApiResponse(new DTDump(getEmail())).toJson().getBytes();
+    }
+
     @ApiRequest(entity = "deck", method = "get")
-    public byte[] getDeck(@ApiParameter("email") String email, @ApiParameter("name") String deckName) {
+    @ApiRequireAuthorization
+    public byte[] getDeck(@ApiParameter("name") String deckName) {
+        String email = getEmail();
+
         StorageUser user = StorageUserRepository.getByEmail(email);
         if (user == null)
             return new ApiError(ApiError.METHOD, 1, "There is no user with this email.").toJson().getBytes();
@@ -85,7 +122,10 @@ public class LearnWordsService {
     }
 
     @ApiRequest(entity = "deck", method = "getExpanded")
-    public byte[] getExpandedDeck(@ApiParameter("email") String email, @ApiParameter("name") String deckName) {
+    @ApiRequireAuthorization
+    public byte[] getExpandedDeck(@ApiParameter("name") String deckName) {
+        String email = getEmail();
+
         StorageUser user = StorageUserRepository.getByEmail(email);
         if (user == null)
             return new ApiError(ApiError.METHOD, 1, "There is no user with this email.").toJson().getBytes();
@@ -98,7 +138,10 @@ public class LearnWordsService {
     }
 
     @ApiRequest(entity = "deck", method = "save")
-    public byte[] saveDeck(@ApiParameter("email") String email, @ApiParameter("deck") ApiDeck deck) {
+    @ApiRequireAuthorization
+    public byte[] saveDeck(@ApiParameter("deck") ApiDeck deck) {
+        String email = getEmail();
+
         StorageUser user = StorageUserRepository.getByEmail(email);
         if (user == null)
             return new ApiError(ApiError.METHOD, 1, "There is no user with this email.").toJson().getBytes();
@@ -125,7 +168,10 @@ public class LearnWordsService {
     }
 
     @ApiRequest(entity = "deck", method = "delete")
-    public byte[] deleteDeck(@ApiParameter("email") String email, @ApiParameter("name") String name) {
+    @ApiRequireAuthorization
+    public byte[] deleteDeck(@ApiParameter("name") String name) {
+        String email = getEmail();
+
         StorageUser user = StorageUserRepository.getByEmail(email);
         if (user == null)
             return new ApiError(ApiError.METHOD, 1, "There is no user with this email.").toJson().getBytes();
@@ -137,6 +183,9 @@ public class LearnWordsService {
         user.getPersonalDecks().remove(deck.getId());
         StorageUserRepository.replaceWithId(user.getId(), user);
 
+        for (ObjectId cardId : deck.getCards())
+            StorageCardRepository.deleteWithId(cardId);
+
         long countOfDeleted = StorageDeckRepository.deleteWithId(deck.getId()).getDeletedCount();
 
         return countOfDeleted == 1
@@ -145,8 +194,10 @@ public class LearnWordsService {
     }
 
     @ApiRequest(entity = "deck", method = "update")
-    public byte[] updateDeck(@ApiParameter("email") String email, @ApiParameter("name") String name,
-                             @ApiParameter("properties") Map<String, Object> properties) {
+    @ApiRequireAuthorization
+    public byte[] updateDeck(@ApiParameter("name") String name, @ApiParameter("properties") Map<String, Object> properties) {
+        String email = getEmail();
+
         StorageUser user = StorageUserRepository.getByEmail(email);
         if (user == null)
             return new ApiError(ApiError.METHOD, 1, "There is no user with this email.").toJson().getBytes();
@@ -177,7 +228,10 @@ public class LearnWordsService {
     }
 
     @ApiRequest(entity = "card", method = "save")
-    public byte[] saveCard(@ApiParameter("email") String email, @ApiParameter("card") ApiCard card) {
+    @ApiRequireAuthorization
+    public byte[] saveCard(@ApiParameter("card") ApiCard card) {
+        String email = getEmail();
+
         StorageUser user = StorageUserRepository.getByEmail(email);
         if (user == null)
             return new ApiError(ApiError.METHOD, 1, "There is no user with this email.").toJson().getBytes();
@@ -209,8 +263,10 @@ public class LearnWordsService {
     }
 
     @ApiRequest(entity = "card", method = "get")
-    public byte[] getCard(@ApiParameter("email") String email, @ApiParameter("deck") String deckName,
-                          @ApiParameter("word") String word, @ApiParameter("comment") String comment) {
+    @ApiRequireAuthorization
+    public byte[] getCard(@ApiParameter("deck") String deckName, @ApiParameter("word") String word, @ApiParameter("comment") String comment) {
+        String email = getEmail();
+
         StorageUser user = StorageUserRepository.getByEmail(email);
         if (user == null)
             return new ApiError(ApiError.METHOD, 1, "There is no user with this email.").toJson().getBytes();
@@ -227,8 +283,11 @@ public class LearnWordsService {
     }
 
     @ApiRequest(entity = "card", method = "delete")
-    public byte[] deleteCard(@ApiParameter("email") String email, @ApiParameter("deck") String deckName,
+    @ApiRequireAuthorization
+    public byte[] deleteCard(@ApiParameter("deck") String deckName,
                              @ApiParameter("word") String word, @ApiParameter("comment") String comment) {
+        String email = getEmail();
+
         StorageUser user = StorageUserRepository.getByEmail(email);
         if (user == null)
             return new ApiError(ApiError.METHOD, 1, "There is no user with this email.").toJson().getBytes();
@@ -250,9 +309,12 @@ public class LearnWordsService {
     }
 
     @ApiRequest(entity = "card", method = "update")
-    public byte[] updateCard(@ApiParameter("email") String email, @ApiParameter("deck") String deckName,
+    @ApiRequireAuthorization
+    public byte[] updateCard(@ApiParameter("deck") String deckName,
                              @ApiParameter("word") String word, @ApiParameter("comment") String comment,
                              @ApiParameter("properties") Map<String, Object> properties) {
+        String email = getEmail();
+
         StorageUser user = StorageUserRepository.getByEmail(email);
         if (user == null)
             return new ApiError(ApiError.METHOD, 1, "There is no user with this email.").toJson().getBytes();

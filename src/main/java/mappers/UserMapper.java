@@ -3,6 +3,7 @@ package mappers;
 import api.ApiExpandedUser;
 import api.ApiSharedDeckReference;
 import api.ApiUser;
+import auxiliary.TimestampFactory;
 import com.mongodb.client.model.Filters;
 import org.bson.types.ObjectId;
 import storage.*;
@@ -87,6 +88,7 @@ public class UserMapper implements Mapper<StorageUser, ApiUser> {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList()));
         }
+        storageUser.setTimestamp(TimestampFactory.getTimestamp());
 
         return storageUser;
     }

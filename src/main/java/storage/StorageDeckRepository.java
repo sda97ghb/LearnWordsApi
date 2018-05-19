@@ -5,6 +5,9 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
 import org.bson.types.ObjectId;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class StorageDeckRepository {
     private static MongoCollection<StorageDeck> getDbCollection() {
         return Database.getCollection(StorageDeck.class);
@@ -33,5 +36,12 @@ public class StorageDeckRepository {
 
     public static DeleteResult deleteWithId(ObjectId id) {
         return StorageDeckRepository.getDbCollection().deleteOne(Filters.eq("_id", id));
+    }
+
+    public static List<StorageDeck> getAll() {
+        List<StorageDeck> storageDecks = new LinkedList<>();
+        for (StorageDeck storageDeck : getDbCollection().find())
+            storageDecks.add(storageDeck);
+        return storageDecks;
     }
 }

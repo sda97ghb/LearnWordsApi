@@ -1,6 +1,7 @@
 package mappers;
 
 import api.ApiCard;
+import auxiliary.TimestampFactory;
 import com.mongodb.client.model.Filters;
 import storage.*;
 
@@ -43,6 +44,7 @@ public class CardMapper implements Mapper<StorageCard, ApiCard> {
         storageCard.setTranslation(apiCard.getTranslation());
         storageCard.setDifficulty(apiCard.getDifficulty());
         storageCard.setHidden(apiCard.isHidden());
+        storageCard.setTimestamp(TimestampFactory.getTimestamp());
         return storageCard;
     }
 }

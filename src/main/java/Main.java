@@ -12,6 +12,7 @@ import java.net.URLDecoder;
 @EnableAutoConfiguration
 public class Main {
     private static ServiceExecutor serviceExecutor = new ServiceExecutor(LearnWordsService.class);
+    private static ServiceExecutor syncServiceExecutor = new ServiceExecutor(SyncService.class);
 
     @RequestMapping("/")
     @ResponseBody
@@ -25,6 +26,13 @@ public class Main {
         requestBody = URLDecoder.decode(requestBody);
 //        System.out.println(requestBody);
         return serviceExecutor.invoke(requestBody);
+    }
+
+    @RequestMapping(path = "/syncapi/1.0", method = RequestMethod.POST, produces = "application/json")
+    @ResponseBody
+    byte[] syncapi(@RequestBody String requestBody) {
+        requestBody = URLDecoder.decode(requestBody);
+        return syncServiceExecutor.invoke(requestBody);
     }
 
     public static void main(String... args) {

@@ -1,18 +1,22 @@
 import apiannotation.ApiParameter;
 import apiannotation.ApiRequest;
 
+import apiannotation.ApiRequireAuthorization;
+import auxiliary.GoogleAuthorization;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.gson.Gson;
 
 import com.google.gson.JsonSyntaxException;
-import org.apache.commons.lang.NotImplementedException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
+import java.security.GeneralSecurityException;
 import java.util.*;
 
 public class ServiceExecutor {
@@ -22,9 +26,13 @@ public class ServiceExecutor {
         }
     }
 
+    private Class clazz;
+
     private Map<RequestId, Method> handlers = new HashMap<>();
 
-    public ServiceExecutor(Class clazz) throws NotAnnotatedParameterException {
+    public <T extends ApiService> ServiceExecutor(Class<T> clazz) throws NotAnnotatedParameterException {
+        this.clazz = clazz;
+
         for (Method classMethod : clazz.getMethods()) {
             ApiRequest apiRequest = classMethod.getAnnotation(ApiRequest.class);
             if (apiRequest == null)
@@ -34,7 +42,8 @@ public class ServiceExecutor {
 
             for (Parameter parameter : classMethod.getParameters())
                 if (!parameter.isAnnotationPresent(ApiParameter.class))
-                    throw new NotAnnotatedParameterException(parameter.getName());
+                    throw new NotAnnotatedParameterException("Class " + clazz.getName() +
+                        ", method " + classMethod.getName() + ", parameter " + parameter.getName());
         }
     }
 
@@ -71,18 +80,69 @@ public class ServiceExecutor {
             else if (value instanceof JSONObject)
                 parameterValues.add(gson.fromJson(value.toString(), parameter.getType()));
             else if (value instanceof JSONArray)
-                return new ApiError(ApiError.SERVER, 103, "Internal error. See ServiceExecutor for more details.").toJson().getBytes();
+                return new ApiError(ApiError.SERVER, 103, "Internal error. Current version of ServiceExecutor does not support array parameters.").toJson().getBytes();
             else
                 parameterValues.add(value);
         }
 
+        ApiService apiService;
+//        LearnWordsService learnWordsService;
+        if (classMethod.isAnnotationPresent(ApiRequireAuthorization.class)) {
+            try {
+                String idToken = requestId.getIdToken();
+                if (idToken == null)
+                    return new ApiError(ApiError.AUTHORIZATION, 1, "Required parameter \"idToken\" is not present.").toJson().getBytes();
+                apiService = (ApiService) clazz.getDeclaredConstructor(GoogleIdToken.Payload.class).newInstance(GoogleAuthorization.getIdTokenPayload(idToken));
+//                learnWordsService = new LearnWordsService(GoogleAuthorization.getIdTokenPayload(idToken));
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+                return new ApiError(ApiError.AUTHORIZATION, 2, e.getMessage()).toJson().getBytes();
+            } catch (GoogleAuthorization.InvalidIdTokenException e) {
+                e.printStackTrace();
+                return new ApiError(ApiError.AUTHORIZATION, 3, e.getMessage()).toJson().getBytes();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return new ApiError(ApiError.AUTHORIZATION, 4, e.getMessage()).toJson().getBytes();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+                return new ApiError(ApiError.AUTHORIZATION, 5, e.getMessage()).toJson().getBytes();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+                return new ApiError(ApiError.AUTHORIZATION, 6, e.getMessage()).toJson().getBytes();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+                return new ApiError(ApiError.AUTHORIZATION, 7, e.getMessage()).toJson().getBytes();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+                return new ApiError(ApiError.AUTHORIZATION, 8, e.getMessage()).toJson().getBytes();
+            }
+        }
+        else {
+            try {
+                apiService = (ApiService) clazz.getDeclaredConstructor().newInstance();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+                return new ApiError(ApiError.SERVER, 100, e.getMessage()).toJson().getBytes();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+                return new ApiError(ApiError.SERVER, 101, e.getMessage()).toJson().getBytes();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+                return new ApiError(ApiError.SERVER, 102, e.getMessage()).toJson().getBytes();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+                return new ApiError(ApiError.SERVER, 103, e.getMessage()).toJson().getBytes();
+            }
+//            learnWordsService = new LearnWordsService();
+        }
+
         try {
-            return (byte[]) classMethod.invoke(new LearnWordsService(), parameterValues.toArray());
+            return (byte[]) classMethod.invoke(apiService, parameterValues.toArray());
         } catch (java.lang.IllegalAccessException e) {
-            return new ApiError(ApiError.SERVER, 101, "Internal error. See ServiceExecutor for more details.").toJson().getBytes();
+            return new ApiError(ApiError.SERVER, 101, "Internal error 101. See ServiceExecutor for more details.").toJson().getBytes();
         } catch (InvocationTargetException e) {
             e.printStackTrace();
-            return new ApiError(ApiError.SERVER, 102, "Internal error. See ServiceExecutor for more details.").toJson().getBytes();
+            return new ApiError(ApiError.SERVER, 102, "Internal error 102. See ServiceExecutor for more details.").toJson().getBytes();
         }
     }
 }

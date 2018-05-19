@@ -1,43 +1,13 @@
-package storage;
+package sync;
 
-import com.google.gson.annotations.SerializedName;
-import org.bson.types.ObjectId;
-
-public class StorageCard {
-    @SerializedName("_id")
-    private ObjectId id;
-
-    @SerializedName("timestamp")
-    private long timestamp = 0;
-
-    @StorageFilter
-    @SerializedName("deck")
-    private ObjectId deck;
-
-    @StorageFilter
-    @SerializedName("word")
+public class SyncCard {
+    private long timestamp;
+    private String deckName;
     private String word;
-
-    @StorageFilter
-    @SerializedName("comment")
     private String comment;
-
-    @SerializedName("translation")
     private String translation;
-
-    @SerializedName("difficulty")
     private int difficulty;
-
-    @SerializedName("hidden")
     private boolean hidden;
-
-    public ObjectId getId() {
-        return id;
-    }
-
-    public void setId(ObjectId id) {
-        this.id = id;
-    }
 
     public long getTimestamp() {
         return timestamp;
@@ -47,12 +17,12 @@ public class StorageCard {
         this.timestamp = timestamp;
     }
 
-    public ObjectId getDeck() {
-        return deck;
+    public String getDeckName() {
+        return deckName;
     }
 
-    public void setDeck(ObjectId deck) {
-        this.deck = deck;
+    public void setDeckName(String deckName) {
+        this.deckName = deckName;
     }
 
     public String getWord() {

@@ -10,6 +10,9 @@ public class StorageDeck {
     @SerializedName("_id")
     private ObjectId id;
 
+    @SerializedName("timestamp")
+    private long timestamp = 0;
+
     @SerializedName("owner")
     @StorageFilter
     private ObjectId owner;
@@ -33,6 +36,14 @@ public class StorageDeck {
 
     public void setId(ObjectId id) {
         this.id = id;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     public ObjectId getOwner() {

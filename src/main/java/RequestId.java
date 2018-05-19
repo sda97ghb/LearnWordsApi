@@ -3,10 +3,12 @@ import java.util.Objects;
 public class RequestId {
     private String entity;
     private String method;
+    private String idToken;
 
     public RequestId(String entity, String method) {
         this.entity = entity;
         this.method = method;
+        this.idToken = null;
     }
 
     public String getEntity() {
@@ -15,6 +17,10 @@ public class RequestId {
 
     public String getMethod() {
         return method;
+    }
+
+    public String getIdToken() {
+        return idToken;
     }
 
     @Override
@@ -33,6 +39,8 @@ public class RequestId {
 
     @Override
     public String toString() {
-        return new StringBuilder().append("entity = ").append(entity).append(", method = ").append(method).toString();
+        return "entity = " + entity +
+            ", method = " + method +
+            ", idToken = " + (idToken == null ? "null" : idToken.substring(0, 10) + "...");
     }
 }

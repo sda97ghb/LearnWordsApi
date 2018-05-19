@@ -1,0 +1,312 @@
+////////////////////////////////////////////////////////////////////////////////
+// Storage
+
+User
+{
+    "_id": ObjectId("user1"),
+    "timestamp": timestamp,    
+    "email": "user@example.com",
+    "personalDecks": [ObjectId("deck1"), ObjectId("deck2")],
+    "sharedDecks": [ObjectId("deck3"), ObjectId("deck4")]
+}
+
+Deck
+{
+    "_id": ObjectId("deck1"),
+    "timestamp": timestamp,
+    "owner": ObjectId("user1"),
+    "name": "Deck 1",
+    "fromLanguage": "English",
+    "toLanguage": "Russian",
+    "cards": [ObjectId("card1"), ObjectId("card2")]
+}
+
+Card
+{
+    "_id": ObjectId("card1"),
+    "timestamp": timestamp,
+    "deck": ObjectId("deck1"),
+    "word": "Word 1",
+    "comment": "Comment 1",
+    "translation": "Translation 1",
+    "difficulty": 10,
+    "hidden": false
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Entities
+
+User
+{
+    "email": "user@example.com",
+    "personalDecks": ["Deck 1", "Deck 2"],
+    "sharedDecks": [
+        {"email": "another@example.com", "name": "Shared Deck 1"},
+        {"email": "another@example.com", "name": "Shared Deck 2"}
+    ]
+}
+
+ExpandedUser
+{
+    "email": "user@example.com",
+    "personalDecks": [
+        {
+            "owner": "user@example.com",
+            "name": "Deck 1",
+            "fromLanguage": "English",
+            "toLanguage": "Russian",
+            "cards": 10,
+            "hidden": 7
+        },
+        {
+            "owner": "user@example.com",
+            "name": "Deck 2",
+            "fromLanguage": "English",
+            "toLanguage": "Russian",
+            "cards": 10,
+            "hidden": 7
+        }
+    ],
+    "sharedDecks": [
+        {"email": "another@example.com", "name": "Shared Deck 1"},
+        {"email": "another@example.com", "name": "Shared Deck 2"}
+    ]
+}
+
+DeckInfo
+{
+    "owner": "user@example.com",
+    "name": "Deck 1",
+    "fromLanguage": "English",
+    "toLanguage": "Russian",
+    "cards": 10,
+    "hidden": 7
+}
+
+Deck
+{
+    "owner": "user@example.com",
+    "name": "Deck 1",
+    "fromLanguage": "English",
+    "toLanguage": "Russian",
+    "cards": [
+        {"word": "Word 1", "comment": "Comment 1"},
+        {"word": "Word 2", "comment": "Comment 2"}
+    ]
+}
+
+Card
+{
+    "owner": "user@example.com",
+    "deck": "Deck 1",
+    "word": "Word 1",
+    "comment": "Comment 1",
+    "translation": "Translation 1",
+    "difficulty": 10,
+    "hidden": false
+}
+
+ExpandedDeck
+{
+    "owner": "user@example.com",
+    "name": "Deck 1",
+    "fromLanguage": "English",
+    "toLanguage": "Russian",
+    "cards": [
+        {
+            "word": "Word 1",
+            "comment": "Comment 1",
+            "translation": "Translation 1",
+            "difficulty": 10,
+            "hidden": false
+        },
+        {
+            "word": "Word 1",
+            "comment": "Comment 1",
+            "translation": "Translation 1",
+            "difficulty": 10,
+            "hidden": false
+        }
+    ]
+}
+
+DTDump
+{
+    "dt": 12345,
+    "decks": [
+        {
+            "name": "Deck 1",
+            "dt": 12345,
+            "cards": [
+                {
+                    "word": "Word 1",
+                    "comment": "Comment 1",
+                    "dt": 12345
+                },
+                {
+                    "word": "Word 2",
+                    "comment": "Comment 2",
+                    "dt": 12345
+                }
+            ]
+        },
+        {
+            "name": "Deck 2",
+            "dt": 12345,
+            "cards": [
+                {
+                    "word": "Word 3",
+                    "comment": "Comment 3",
+                    "dt": 12345
+                },
+                {
+                    "word": "Word 4",
+                    "comment": "Comment 4",
+                    "dt": 12345
+                }
+            ]
+        }
+    ]
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Requests
+
+POST /learnwordsapi/3.0 HTTP/1.0
+
+{
+    "entity": "user",
+    "method": "get",
+    "idToken": "thatlonggooglesigninaccountidtoken"
+}
+
+{
+    "entity": "user",
+    "method": "dumpDT",
+    "idToken": "thatlonggooglesigninaccountidtoken"
+}
+
+{
+    "entity": "deck",
+    "method": "save",
+    "idToken": "thatlonggooglesigninaccountidtoken",
+    "deck": see entity Deck
+}
+
+{
+    "entity": "deck",
+    "method": "get",
+    "idToken": "thatlonggooglesigninaccountidtoken",
+    "name": "Deck 1"
+}
+
+{
+    "entity": "deck",
+    "method": "getExpanded",
+    "idToken": "thatlonggooglesigninaccountidtoken",
+    "name": "Deck 1"
+}
+
+{
+    "entity": "deck",
+    "method": "delete",
+    "idToken": "thatlonggooglesigninaccountidtoken",
+    "name": "Deck 1"
+}
+
+{
+    "entity": "deck",
+    "method": "update",
+    "idToken": "thatlonggooglesigninaccountidtoken",
+    "name": "old name",
+    "properties": {
+        "name": "new name",
+        "fromLanguage": "new value",
+        "toLanguage": "new value"
+    }
+}
+
+{
+    "entity": "deck",
+    "method": "share",
+    "idToken": "thatlonggooglesigninaccountidtoken",
+    "name": "Deck 1",
+    "user": "another@example.com"
+}
+
+{
+    "entity": "card",
+    "method": "save",
+    "idToken": "thatlonggooglesigninaccountidtoken",
+    "card": see entity Card
+}
+
+{
+    "entity": "card",
+    "method": "get",
+    "idToken": "thatlonggooglesigninaccountidtoken",
+    "deck": "Deck 1",
+    "word": "Word 1",
+    "comment": "Comment 1"
+}
+
+{
+    "entity": "card",
+    "method": "delete",
+    "idToken": "thatlonggooglesigninaccountidtoken",
+    "deck": "Deck 1",
+    "word": "Word 1",
+    "comment": "Comment 1"
+}
+
+{
+    "entity": "card",
+    "method": "update",
+    "idToken": "thatlonggooglesigninaccountidtoken",
+    "deck": "deck",
+    "word": "old word",
+    "comment": "old comment",
+    "properties": {
+        "word": "new word",
+        "comment": "new value",
+        "translation": "new value",
+        "difficulty": 10,
+        "hidden": true
+    }
+}
+
+{
+    "entity": "card",
+    "method": "move",
+    "idToken": "thatlonggooglesigninaccountidtoken",
+    "from": "Deck 1",
+    "to": "Deck 2",
+    "word": "Word 1",
+    "comment": "Comment 1"
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Error types
+
+server
+authorization
+method
+
+////////////////////////////////////////////////////////////////////////////////
+// Responses
+
+HTTP/1.0 200 OK
+
+{
+    "error": {
+        "type": "server",
+        "code": 1,
+        "message": "..."
+    }
+}
+
+{
+    "response": {
+        requested values
+    }
+}

@@ -1,0 +1,104 @@
+// Сохранить или перезаписать
+saveDecks
+[
+    {
+        "name": "deck1",
+        "fromLanguage": "",
+        "toLanguage": ""
+    },
+    ...
+]
+->
+{}
+
+// запрос
+queryDecks
+["name1","name2]
+->
+[
+    {
+        "name": "deck1",
+        "fromLanguage": "",
+        "toLanguage": ""
+    },
+    ...
+]
+
+// Удаление
+deleteDecks
+["name1", "name2"]
+->
+{}
+
+// Дамп
+dumpDecks
+->
+[
+    {"name": "", "timestammp": 123},
+    ...
+]
+
+// Сохранить или перезаписать
+saveCards
+[
+    {
+        "deckName": "",
+        "word": "",
+        "comment": "",
+        "translation": "",
+        "difficulty": 10,
+        "hidden": false
+    },
+    ...
+]
+->
+{}
+
+// запрос
+queryCards
+[
+    {
+        "deckName": "",
+        "word": "",
+        "comment": "",
+    },
+    ...
+]
+->
+[
+    {
+        "deckName": "",
+        "word": "",
+        "comment": "",
+        "translation": "",
+        "difficulty": 10,
+        "hidden": false
+    },
+    ...
+]
+
+// Удаление
+deleteDecks
+[
+    {
+        "deckName": "",
+        "word": "",
+        "comment": "",
+    },
+    ...
+]
+->
+{}
+
+// Дамп
+dumpCards
+->
+[
+    {
+        "deckName": "",
+        "word": "",
+        "comment": "",
+        "timestammp": 123
+    },
+    ...
+]

@@ -1,6 +1,7 @@
 package mappers;
 
 import api.*;
+import auxiliary.TimestampFactory;
 import org.bson.types.ObjectId;
 import storage.*;
 
@@ -105,6 +106,7 @@ public class DeckMapper implements Mapper<StorageDeck, ApiDeck> {
         }
         storageDeck.setFromLanguage(apiDeck.getFromLanguage());
         storageDeck.setToLanguage(apiDeck.getToLanguage());
+        storageDeck.setTimestamp(TimestampFactory.getTimestamp());
         return storageDeck;
     }
 

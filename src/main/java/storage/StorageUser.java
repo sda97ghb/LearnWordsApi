@@ -10,6 +10,9 @@ public class StorageUser {
     @SerializedName("_id")
     private ObjectId id;
 
+    @SerializedName("timestamp")
+    private long timestamp = 0;
+
     @SerializedName("email")
     @StorageFilter
     private String email;
@@ -29,6 +32,14 @@ public class StorageUser {
 
     public void setId(ObjectId id) {
         this.id = id;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     public String getEmail() {

@@ -3,6 +3,7 @@ import com.google.gson.annotations.SerializedName;
 
 public class ApiError {
     public static final String SERVER = "server";
+    public static final String AUTHORIZATION = "authorization";
     public static final String METHOD = "method";
 
     @SerializedName("type")
