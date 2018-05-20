@@ -196,8 +196,11 @@ public class SyncService extends ApiService {
     public byte[] dumpCards() {
         List<SyncCardDump> syncCardDumps = StorageCardRepository.getAll().stream()
             .map(storageCard -> {
+                StorageDeck storageDeck = StorageDeckRepository.getById(storageCard.getDeck());
+
                 SyncCardDump syncCardDump = new SyncCardDump();
                 syncCardDump.setTimestamp(storageCard.getTimestamp());
+                syncCardDump.setDeckName(storageDeck == null ? null : storageDeck.getName());
                 syncCardDump.setWord(storageCard.getWord());
                 syncCardDump.setComment(storageCard.getComment());
                 return syncCardDump;

@@ -8,7 +8,7 @@ public class StorageCard {
     private ObjectId id;
 
     @SerializedName("timestamp")
-    private long timestamp = 0;
+    private Long timestamp = 0L;
 
     @StorageFilter
     @SerializedName("deck")
@@ -39,11 +39,11 @@ public class StorageCard {
         this.id = id;
     }
 
-    public long getTimestamp() {
+    public Long getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(long timestamp) {
+    public void setTimestamp(Long timestamp) {
         this.timestamp = timestamp;
     }
 

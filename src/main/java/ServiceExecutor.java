@@ -16,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
+import java.lang.reflect.Type;
 import java.security.GeneralSecurityException;
 import java.util.*;
 
@@ -79,8 +80,13 @@ public class ServiceExecutor {
                 parameterValues.add(null);
             else if (value instanceof JSONObject)
                 parameterValues.add(gson.fromJson(value.toString(), parameter.getType()));
-            else if (value instanceof JSONArray)
-                return new ApiError(ApiError.SERVER, 103, "Internal error. Current version of ServiceExecutor does not support array parameters.").toJson().getBytes();
+            else if (value instanceof JSONArray) {
+                String s = value.toString();
+                Type parameterizedType = parameter.getParameterizedType();
+                Object o = gson.fromJson(s, parameterizedType);
+                parameterValues.add(o);
+            }
+//                return new ApiError(ApiError.SERVER, 103, "Internal error. Current version of ServiceExecutor does not support array parameters.").toJson().getBytes();
             else
                 parameterValues.add(value);
         }

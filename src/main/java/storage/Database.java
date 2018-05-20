@@ -1,5 +1,6 @@
 package storage;
 
+import auxiliary.MongoLongTypeAdapter;
 import auxiliary.MongoObjectIdTypeAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -33,6 +34,7 @@ public class Database {
 
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(ObjectId.class, new MongoObjectIdTypeAdapter())
+            .registerTypeAdapter(Long.class, new MongoLongTypeAdapter())
             .create();
 
     public static MongoDatabase getMongoDatabase() {
